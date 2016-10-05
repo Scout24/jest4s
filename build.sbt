@@ -22,12 +22,13 @@ val testDependencies = Seq(
 
 val appDependencies = Seq(
   ws,
+  "net.maffoo" %% "jsonquote-core" % "0.4.0",
+  "net.maffoo" %% "jsonquote-play" % "0.4.0",
   "com.typesafe.play" %% "play" % playVersion % "provided",
   "com.typesafe.play" %% "play-json" % playVersion % "provided",
   "io.searchbox" % "jest" % "2.0.3",
   "com.typesafe.akka" %% "akka-stream" % "2.4.3",
-  "org.asynchttpclient" % "async-http-client" % "2.0.2",
-  "com.softwaremill.macwire" %% "macros" % "2.2.4"
+  "org.asynchttpclient" % "async-http-client" % "2.0.2"
 )
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
