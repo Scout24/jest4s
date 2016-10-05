@@ -35,6 +35,18 @@ class ElasticClient(jestClient: JestClient)(implicit val ec: ExecutionContext, m
         .build()
     )
 
+  def bulkInsertOrUpdate[T: Writes](documents: Seq[(ElasticSearchId, T)], elasticType: ElasticType, indexName: IndexName): Future[JestResult] = {
+    val bulkBuilder = new Bulk.Builder()
+      .defaultIndex(indexName.indexName)
+      .defaultType(elasticType.typeName)
+    documents.foreach {
+      case (id, document) ⇒
+        val insertAction = new Index.Builder(Json.stringify(Json.toJson(document))).id(id.elasticSearchId).build()
+        bulkBuilder.addAction(insertAction)
+    }
+    execute(bulkBuilder.build())
+  }
+
   def getDocument[T: Reads](id: ElasticSearchId, elasticType: ElasticType, indexName: IndexName): Future[Option[T]] =
     execute(new Get.Builder(indexName.indexName, id.elasticSearchId).`type`(elasticType.typeName).build())
       .map(_.getSourceAsString)
