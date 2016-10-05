@@ -21,7 +21,6 @@ val testDependencies = Seq(
 ).map(_ % "test")
 
 val appDependencies = Seq(
-  ws,
   "net.maffoo" %% "jsonquote-core" % "0.4.0",
   "net.maffoo" %% "jsonquote-play" % "0.4.0",
   "com.typesafe.play" %% "play" % playVersion % "provided",
@@ -110,6 +109,4 @@ lazy val root = Project(
       commitNextVersion,
       pushChanges
     )
-
-
-  ).enablePlugins(play.sbt.PlayScala)
+  )
