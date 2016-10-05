@@ -14,6 +14,8 @@ class ElasticClientSpec extends StatefulElasticSpec {
 
   implicit val someDocumentFormat: Format[SomeDocument] = Json.format[SomeDocument]
 
+  case class SomeDocument(someField: Long)
+
   val givenDocument = SomeDocument(42L)
   val givenID = ElasticSearchId("givenID")
 
@@ -109,6 +111,4 @@ class ElasticClientSpec extends StatefulElasticSpec {
       }
     }
   }
-
-  case class SomeDocument(someField: Long)
 }
