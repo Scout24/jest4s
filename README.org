@@ -1,20 +1,20 @@
 * jest4s
 
-[[ https://github.com/searchbox-io/jest ][jest]] client wrapper for scala. With blackjack.
+[[https://github.com/searchbox-io/jest][jest]] client wrapper for scala. With blackjack.
 
 
 ** Features
    - Return `scala.concurrent.Future`s
-   - Integrated with [[ https://www.playframework.com/ ][play]] JSON
+   - Integrated with [[https://www.playframework.com/][play]] JSON
    - Saner default error handling (you don't have to check return values for errors, it will blow up if something goes wrong)
    - No builder pattern galore
    - Reactive streams interface to scroll API (akka streams)
 
 ** Usage
-   See [[ https://github.com/ImmobilienScout24/jest4s/blob/master/src/test/scala/de/is24/jest4s/ElasticClientSpec.scala ][the spec]] for sample usage.
+   See [[https://github.com/ImmobilienScout24/jest4s/blob/master/src/test/scala/de/is24/jest4s/ElasticClientSpec.scala][the spec]] for sample usage.
 
 
-
+   
 ** Release to maven central
 #+BEGIN_SRC 
 sbt> release with-defaults
