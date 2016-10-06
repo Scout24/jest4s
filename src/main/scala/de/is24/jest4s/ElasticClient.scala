@@ -5,6 +5,7 @@ import scala.concurrent.duration.Duration
 
 import akka.NotUsed
 import akka.stream.Materializer
+
 import akka.stream.scaladsl.Source
 import io.searchbox.action.Action
 import io.searchbox.client.{ JestClient, JestResult }
@@ -56,7 +57,7 @@ class ElasticClient(jestClient: JestClient)(implicit val ec: ExecutionContext, m
           case JsSuccess(t, _) ⇒
             Some(t)
           case e: JsError ⇒
-            log.error(s"Could not parse document form elastic search: ${e.errors}")
+            log.error(s"Could not parse document from elasticsearch: ${e.errors}")
             None
         }
       }
