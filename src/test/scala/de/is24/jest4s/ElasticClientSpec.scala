@@ -34,10 +34,14 @@ class ElasticClientSpec extends StatefulElasticSpec {
       val mappingBody =
         json"""{
             ${testType.typeName} : {
-              "someField": "long"
+              "properties": {
+                "someField": {
+                  "type": "long"
+                }
+              }
             }
           }"""
-      elasticClient.createMapping(testIndex, testType, mappingBody)
+      await(MappingSetup.perform(elasticClient, Seq(IndexMapping(testIndex, testType, mappingBody))))
     }
 
     "persist a document" in new WithElasticClient {
