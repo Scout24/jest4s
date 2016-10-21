@@ -19,3 +19,4 @@
 #+BEGIN_SRC 
 sbt> release with-defaults
 #+END_SRC
+   more info [[https://wiki.rz.is/x/H9jUB][wiki]]
