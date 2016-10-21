@@ -115,4 +115,47 @@ class ElasticClientSpec extends StatefulElasticSpec {
       }
     }
   }
+
+  "retrieve one batch of document by query string" in new WithElasticClient {
+    val maxFieldValue = 333L
+    val documentsWithId = Seq(
+      111L → "A",
+      222L → "B",
+      333L → "C",
+      444L → "D"
+    )
+
+    await(Future.sequence(documentsWithId.map {
+      case (field, id) ⇒
+        elasticClient.upsertDocument(ElasticSearchId(id), SomeDocument(field), testType, testIndex)
+    }))
+    await(elasticClient.refreshIndex(testIndex))
+
+    val query =
+      json"""{
+               "size": 3,
+               "query": {
+                  "match_all": {}
+               },
+               "filter": {
+                 "bool": {
+                   "must": {
+                     "range": {
+                       "someField": { "gte": 44, "lte": $maxFieldValue }
+                     }
+                   }
+                 }
+               }
+            }"""
+    val scrollBatchResult = await(elasticClient.search[SomeDocument](testIndex, query))
+    val (matchingDocuments, notMatchingDocuments) = documentsWithId
+      .map(_._1)
+      .map(SomeDocument.apply)
+      .partition(_.someField <= maxFieldValue)
+
+    scrollBatchResult must containAllOf(matchingDocuments)
+    notMatchingDocuments.foreach { notMatching ⇒
+      scrollBatchResult must not contain (notMatching)
+    }
+  }
 }

@@ -2,10 +2,8 @@ package de.is24.jest4s
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.Duration
-
 import akka.NotUsed
 import akka.stream.Materializer
-
 import akka.stream.scaladsl.Source
 import io.searchbox.action.Action
 import io.searchbox.client.{ JestClient, JestResult }
@@ -15,7 +13,6 @@ import io.searchbox.indices.{ CreateIndex, Refresh }
 import io.searchbox.indices.mapping.PutMapping
 import io.searchbox.params.Parameters
 import play.api.libs.json._
-
 import PromiseJestResultHandler._
 import utils.SLF4JLogging
 import Protocol._
@@ -65,6 +62,21 @@ class ElasticClient(jestClient: JestClient)(implicit val ec: ExecutionContext, m
         case e: ElasticSearchException if e.getMessage.contains("404 Not Found") ⇒
           None
       }
+
+  def search[T: Reads](indexName: IndexName, query: JsValue): Future[Seq[T]] =
+    execute(new Search.Builder(Json.stringify(query))
+      .addIndex(indexName.indexName)
+      .build()).map(_.getJsonString)
+      .map(Json.parse)
+      .map(_ \ "hits" \ "hits")
+      .flatMap(_.validate[Seq[Hit[T]]] match {
+        case JsSuccess(hits, _) ⇒
+          Future.successful(hits.map(_.source))
+        case e: JsError ⇒
+          val message: String = s"Could not parse documents from elastic search: ${e.errors}"
+          log.error(message)
+          Future.failed(new Exception(message))
+      })
 
   protected def execute[T <: JestResult](request: Action[T]): Future[T] = {
     jestClient.executeAsyncPromise(request)

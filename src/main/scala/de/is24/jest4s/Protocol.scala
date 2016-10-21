@@ -5,17 +5,15 @@ import play.api.libs.functional.syntax._
 
 object Protocol {
 
-  case class ScrollBatchHit[T](source: T)
-
-  implicit def scrollBatchHitReads[T: Reads]: Reads[ScrollBatchHit[T]] = {
-    (JsPath \ "_source").read[T].map(t ⇒ ScrollBatchHit(t))
+  implicit def scrollBatchHitReads[T: Reads]: Reads[Hit[T]] = {
+    (JsPath \ "_source").read[T].map(t ⇒ Hit(t))
   }
 
   implicit def scrollBatchResultReads[T: Reads]: Reads[ScrollBatchResult[T]] = {
     (
       (JsPath \ "_scroll_id").read[String] and
-      (JsPath \ "hits" \ "hits").read[List[ScrollBatchHit[T]]]
-    ) { (scrollId: String, hits: List[ScrollBatchHit[T]]) ⇒
+      (JsPath \ "hits" \ "hits").read[List[Hit[T]]]
+    ) { (scrollId: String, hits: List[Hit[T]]) ⇒
         ScrollBatchResult(scrollId, hits.map(_.source))
       }
   }
