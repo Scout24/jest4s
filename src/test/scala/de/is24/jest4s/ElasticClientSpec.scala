@@ -36,21 +36,14 @@ class ElasticClientSpec extends StatefulElasticSpec {
       await(elasticClient.createIndex(testIndexWithSettings, 3, 1))
       val indexSettings = await(elasticClient.getSettings(testIndexWithSettings))
 
-      indexSettings
+      val settingValues = indexSettings
         .getJsonObject
         .getAsJsonObject(testIndexWithSettings.indexName)
         .getAsJsonObject("settings")
         .getAsJsonObject("index")
-        .getAsJsonPrimitive("number_of_shards")
-        .getAsString must be equalTo "3"
 
-      indexSettings
-        .getJsonObject
-        .getAsJsonObject(testIndexWithSettings.indexName)
-        .getAsJsonObject("settings")
-        .getAsJsonObject("index")
-        .getAsJsonPrimitive("number_of_replicas")
-        .getAsString must be equalTo "1"
+        settingValues.getAsJsonPrimitive("number_of_shards").getAsString must be equalTo "3"
+        settingValues.getAsJsonPrimitive("number_of_replicas").getAsString must be equalTo "1"
     }
 
     "create a mapping" in new WithElasticClient {
