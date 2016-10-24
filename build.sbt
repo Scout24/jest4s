@@ -8,10 +8,9 @@ val javaVersion = "1.8"
 val encoding = "utf-8"
 val playVersion = "2.5.8"
 val specs2Version = "3.7.2"
-val elasticSearchVersion: String = "1.5.2"
+val elasticSearchVersion: String = "2.3.0"
 
 val testDependencies = Seq(
-  "org.elasticsearch" % "elasticsearch" % elasticSearchVersion,
   "com.typesafe.akka" %% "akka-testkit" % "2.3.9",
   "com.typesafe.play" %% "play-test" % playVersion,
   "com.typesafe.play" %% "play-specs2" % playVersion,
@@ -21,6 +20,7 @@ val testDependencies = Seq(
 ).map(_ % "test")
 
 val appDependencies = Seq(
+  "org.elasticsearch" % "elasticsearch" % elasticSearchVersion,
   "net.maffoo" %% "jsonquote-core" % "0.4.0",
   "net.maffoo" %% "jsonquote-play" % "0.4.0",
   "com.typesafe.play" %% "play" % playVersion % "provided",
