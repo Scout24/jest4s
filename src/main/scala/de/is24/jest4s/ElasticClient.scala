@@ -16,6 +16,8 @@ import play.api.libs.json._
 import PromiseJestResultHandler._
 import utils.SLF4JLogging
 import Protocol._
+import io.searchbox.indices.settings.GetSettings
+import org.elasticsearch.common.settings.Settings
 
 class ElasticSearchException(message: String) extends RuntimeException(message)
 
@@ -95,11 +97,19 @@ sealed trait JestMethods {
 
 sealed trait SchemaMethods extends JestMethods with SLF4JLogging {
 
-  def createIndex(indexName: IndexName): Future[JestResult] =
+  def createIndex(indexName: IndexName, shards: Int = 5, replica: Int = 0): Future[JestResult] = {
+
+    val settings: Settings = Settings.settingsBuilder()
+      .put("number_of_shards", shards)
+      .put("number_of_replicas", replica)
+      .build()
+
     execute(
       new CreateIndex.Builder(indexName.indexName)
+        .settings(settings)
         .build()
     )
+  }
 
   // Use this carefully, it comes at a high performance cost
   def refreshIndex(indexNames: IndexName*): Future[JestResult] = {
@@ -115,6 +125,11 @@ sealed trait SchemaMethods extends JestMethods with SLF4JLogging {
         .build()
     )
 
+  def getSettings(indexName: IndexName): Future[JestResult] = {
+    execute(
+      new GetSettings.Builder().addIndex(indexName.indexName).build()
+    )
+  }
 }
 
 sealed trait ScrollMethods extends JestMethods with SLF4JLogging {

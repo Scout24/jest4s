@@ -20,6 +20,7 @@ class ElasticClientSpec extends StatefulElasticSpec {
   val givenID = ElasticSearchId("givenID")
 
   val testIndex = IndexName("testindex")
+  val testIndexWithSettings = IndexName("testindex-with-settings")
   val testType = ElasticType("testtype")
 
   sequential
@@ -27,7 +28,29 @@ class ElasticClientSpec extends StatefulElasticSpec {
   "A elastic client" should {
 
     "create an index" in new WithElasticClient {
-      await(elasticClient.createIndex(testIndex))
+      val result = await(elasticClient.createIndex(testIndex))
+      result.getJsonString must be equalTo """{"acknowledged":true}"""
+    }
+
+    "create an index with custom settings" in new WithElasticClient {
+      await(elasticClient.createIndex(testIndexWithSettings, 3, 1))
+      val indexSettings = await(elasticClient.getSettings(testIndexWithSettings))
+
+      indexSettings
+        .getJsonObject
+        .getAsJsonObject(testIndexWithSettings.indexName)
+        .getAsJsonObject("settings")
+        .getAsJsonObject("index")
+        .getAsJsonPrimitive("number_of_shards")
+        .getAsString must be equalTo "3"
+
+      indexSettings
+        .getJsonObject
+        .getAsJsonObject(testIndexWithSettings.indexName)
+        .getAsJsonObject("settings")
+        .getAsJsonObject("index")
+        .getAsJsonPrimitive("number_of_replicas")
+        .getAsString must be equalTo "1"
     }
 
     "create a mapping" in new WithElasticClient {
@@ -111,7 +134,7 @@ class ElasticClientSpec extends StatefulElasticSpec {
 
       scrollBatchResult must containAllOf(matchingDocuments)
       notMatchingDocuments.foreach { notMatching ⇒
-        scrollBatchResult must not contain (notMatching)
+        scrollBatchResult must not contain notMatching
       }
     }
   }
@@ -155,7 +178,7 @@ class ElasticClientSpec extends StatefulElasticSpec {
 
     scrollBatchResult must containAllOf(matchingDocuments)
     notMatchingDocuments.foreach { notMatching ⇒
-      scrollBatchResult must not contain (notMatching)
+      scrollBatchResult must not contain notMatching
     }
   }
 }
