@@ -1,23 +1,24 @@
 package de.is24.jest4s
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration.Duration
 import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import de.is24.jest4s.PromiseJestResultHandler._
+import de.is24.jest4s.Protocol._
+import de.is24.jest4s.utils.SLF4JLogging
 import io.searchbox.action.Action
 import io.searchbox.client.{ JestClient, JestResult }
-import io.searchbox.core._
 import io.searchbox.core.SearchScroll.Builder
-import io.searchbox.indices.{ CreateIndex, Refresh }
+import io.searchbox.core._
 import io.searchbox.indices.mapping.PutMapping
+import io.searchbox.indices.settings.GetSettings
+import io.searchbox.indices.{ CreateIndex, Refresh }
 import io.searchbox.params.Parameters
 import play.api.libs.json._
-import PromiseJestResultHandler._
-import utils.SLF4JLogging
-import Protocol._
-import io.searchbox.indices.settings.GetSettings
-import org.elasticsearch.common.settings.Settings
+
+import scala.collection.JavaConverters._
+import scala.concurrent.duration.Duration
+import scala.concurrent.{ ExecutionContext, Future }
 
 class ElasticSearchException(message: String) extends RuntimeException(message)
 
@@ -99,14 +100,14 @@ sealed trait SchemaMethods extends JestMethods with SLF4JLogging {
 
   def createIndex(indexName: IndexName, shards: Int = 5, replica: Int = 0): Future[JestResult] = {
 
-    val settings: Settings = Settings.settingsBuilder()
-      .put("number_of_shards", shards)
-      .put("number_of_replicas", replica)
-      .build()
+    val settings: Map[String, String] = Map(
+      "number_of_shards" -> shards.toString,
+      "number_of_replicas" -> replica.toString
+    )
 
     execute(
       new CreateIndex.Builder(indexName.indexName)
-        .settings(settings)
+        .settings(settings.asJava)
         .build()
     )
   }

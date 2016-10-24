@@ -42,8 +42,8 @@ class ElasticClientSpec extends StatefulElasticSpec {
         .getAsJsonObject("settings")
         .getAsJsonObject("index")
 
-        settingValues.getAsJsonPrimitive("number_of_shards").getAsString must be equalTo "3"
-        settingValues.getAsJsonPrimitive("number_of_replicas").getAsString must be equalTo "1"
+      settingValues.getAsJsonPrimitive("number_of_shards").getAsString must be equalTo "3"
+      settingValues.getAsJsonPrimitive("number_of_replicas").getAsString must be equalTo "1"
     }
 
     "create a mapping" in new WithElasticClient {
