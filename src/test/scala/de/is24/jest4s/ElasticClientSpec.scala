@@ -20,44 +20,48 @@ class ElasticClientSpec extends StatefulElasticSpec {
   val givenID = ElasticSearchId("givenID")
 
   val testIndex = IndexName("testindex")
-  val testIndexWithSettings = IndexName("testindex-with-settings")
+  val simpleIndex = IndexName("simpleindex")
   val testType = ElasticType("testtype")
+
+  val numberOfShards = NumberOfShards(4)
+  val numberOfReplica = NumberOfReplica(1)
+  val indexSettings = IndexSettings(numberOfShards, numberOfReplica)
+
+  val mappingBody =
+    json"""{
+        ${testType.typeName} : {
+          "properties": {
+            "someField": {
+              "type": "long"
+            }
+          }
+        }
+      }"""
+  val indexMapping = IndexMapping(testIndex, testType, mappingBody)
 
   sequential
 
   "A elastic client" should {
 
     "create an index" in new WithElasticClient {
-      val result = await(elasticClient.createIndex(testIndex))
+      val result = await(elasticClient.createIndex(simpleIndex))
       result.getJsonString must be equalTo """{"acknowledged":true}"""
     }
 
-    "create an index with custom settings" in new WithElasticClient {
-      await(elasticClient.createIndex(testIndexWithSettings, 3, 1))
-      val indexSettings = await(elasticClient.getSettings(testIndexWithSettings))
+    "create an index with mapping and settings" in new WithElasticClient {
+      await(MappingSetup.perform(elasticClient, Seq(indexMapping), Seq(indexSettings)))
 
-      val settingValues = indexSettings
+      val settingsResult = await(elasticClient.getSettings(testIndex))
         .getJsonObject
-        .getAsJsonObject(testIndexWithSettings.indexName)
+        .getAsJsonObject(testIndex.indexName)
         .getAsJsonObject("settings")
         .getAsJsonObject("index")
 
-      settingValues.getAsJsonPrimitive("number_of_shards").getAsString must be equalTo "3"
-      settingValues.getAsJsonPrimitive("number_of_replicas").getAsString must be equalTo "1"
-    }
+      settingsResult.getAsJsonPrimitive("number_of_shards").getAsString must be equalTo numberOfShards.number.toString
+      settingsResult.getAsJsonPrimitive("number_of_replicas").getAsString must be equalTo numberOfReplica.number.toString
 
-    "create a mapping" in new WithElasticClient {
-      val mappingBody =
-        json"""{
-            ${testType.typeName} : {
-              "properties": {
-                "someField": {
-                  "type": "long"
-                }
-              }
-            }
-          }"""
-      await(MappingSetup.perform(elasticClient, Seq(IndexMapping(testIndex, testType, mappingBody))))
+      val mappingResult = await(elasticClient.getMapping(testIndex))
+      mappingResult.getJsonString must beEqualTo("""{"testindex":{"mappings":{"testtype":{"properties":{"someField":{"type":"long"}}}}}}""")
     }
 
     "persist a document" in new WithElasticClient {

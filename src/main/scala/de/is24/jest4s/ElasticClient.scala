@@ -10,7 +10,7 @@ import io.searchbox.action.Action
 import io.searchbox.client.{ JestClient, JestResult }
 import io.searchbox.core.SearchScroll.Builder
 import io.searchbox.core._
-import io.searchbox.indices.mapping.PutMapping
+import io.searchbox.indices.mapping.{ GetMapping, PutMapping }
 import io.searchbox.indices.settings.GetSettings
 import io.searchbox.indices.{ CreateIndex, Refresh }
 import io.searchbox.params.Parameters
@@ -124,6 +124,11 @@ sealed trait SchemaMethods extends JestMethods with SLF4JLogging {
     execute(
       new PutMapping.Builder(indexName.indexName, typeName.typeName, Json.stringify(mappingBody))
         .build()
+    )
+
+  def getMapping(indexName: IndexName): Future[JestResult] =
+    execute(
+      new GetMapping.Builder().addIndex(indexName.indexName).build()
     )
 
   def getSettings(indexName: IndexName): Future[JestResult] = {

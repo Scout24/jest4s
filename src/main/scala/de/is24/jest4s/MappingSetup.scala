@@ -8,19 +8,21 @@ import scala.util.control.NonFatal
 
 object MappingSetup extends SLF4JLogging {
 
-  def perform(elasticClient: ElasticClient, mappings: Seq[IndexMapping])(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.sequence(mappings.map {
-      indexMapping =>
+  def perform(elasticClient: ElasticClient, mappings: Seq[IndexMapping], settings: Seq[IndexSettings])(implicit ec: ExecutionContext): Future[Unit] = {
+    require(mappings.size == settings.size, s"Number of index mappings(${mappings.size}) does not match number of index settings(${settings.size}).")
+
+    Future.sequence(mappings.zip(settings).map {
+      case (indexMapping, indexSettings) =>
         for {
-          _ ← createIndex(elasticClient, indexMapping.indexName)
+          _ ← createIndex(elasticClient, indexMapping.indexName, indexSettings)
           _ ← createMapping(elasticClient, indexMapping)
         } yield ()
     }).map(_ ⇒ ())
   }
 
-  private def createIndex(elasticClient: ElasticClient, indexName: IndexName)(implicit ec: ExecutionContext): Future[Unit] =
+  private def createIndex(elasticClient: ElasticClient, indexName: IndexName, indexSettings: IndexSettings)(implicit ec: ExecutionContext): Future[Unit] =
     elasticClient
-      .createIndex(indexName)
+      .createIndex(indexName, indexSettings.numberOfShards.number, indexSettings.numberOfReplicas.number)
       .map(_ ⇒ ())
       .recoverWith {
         case NonFatal(exception) ⇒
