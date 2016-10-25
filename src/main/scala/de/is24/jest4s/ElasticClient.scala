@@ -98,19 +98,19 @@ sealed trait JestMethods {
 
 sealed trait SchemaMethods extends JestMethods with SLF4JLogging {
 
-  def createIndex(indexName: IndexName, shards: Int = 5, replica: Int = 0): Future[JestResult] = {
-
-    val settings: Map[String, String] = Map(
-      "number_of_shards" -> shards.toString,
-      "number_of_replicas" -> replica.toString
-    )
-
+  def createIndex(indexName: IndexName, indexSettings: Option[IndexSettings] = None): Future[JestResult] =
     execute(
-      new CreateIndex.Builder(indexName.indexName)
-        .settings(settings.asJava)
-        .build()
+      indexSettings.fold(new CreateIndex.Builder(indexName.indexName).build()) {
+        indexSettings: IndexSettings =>
+          val settings: Map[String, String] = Map(
+            "number_of_shards" -> indexSettings.numberOfShards.number.toString,
+            "number_of_replicas" -> indexSettings.numberOfReplicas.number.toString
+          )
+          new CreateIndex.Builder(indexName.indexName)
+            .settings(settings.asJava)
+            .build()
+      }
     )
-  }
 
   // Use this carefully, it comes at a high performance cost
   def refreshIndex(indexNames: IndexName*): Future[JestResult] = {

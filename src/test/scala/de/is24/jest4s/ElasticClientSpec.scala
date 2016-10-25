@@ -23,8 +23,8 @@ class ElasticClientSpec extends StatefulElasticSpec {
   val simpleIndex = IndexName("simpleindex")
   val testType = ElasticType("testtype")
 
-  val numberOfShards = NumberOfShards(4)
-  val numberOfReplica = NumberOfReplica(1)
+  val numberOfShards = NumberOfShards(3)
+  val numberOfReplica = NumberOfReplica(0)
   val indexSettings = IndexSettings(numberOfShards, numberOfReplica)
 
   val mappingBody =
@@ -38,6 +38,7 @@ class ElasticClientSpec extends StatefulElasticSpec {
         }
       }"""
   val indexMapping = IndexMapping(testIndex, testType, mappingBody)
+  val indexOptions = IndexOptions(indexMapping = indexMapping, indexSettings = Option(indexSettings))
 
   sequential
 
@@ -49,7 +50,7 @@ class ElasticClientSpec extends StatefulElasticSpec {
     }
 
     "create an index with mapping and settings" in new WithElasticClient {
-      await(MappingSetup.perform(elasticClient, Seq(indexMapping), Seq(indexSettings)))
+      await(MappingSetup.perform(elasticClient, Seq(indexOptions)))
 
       val settingsResult = await(elasticClient.getSettings(testIndex))
         .getJsonObject
