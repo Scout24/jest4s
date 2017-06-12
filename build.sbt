@@ -6,7 +6,7 @@ import scalariform.formatter.preferences._
 
 val javaVersion = "1.8"
 val encoding = "utf-8"
-val playVersion = "2.5.8"
+val playVersion = "2.5.15"
 val specs2Version = "3.7.2"
 val elasticSearchVersion: String = "2.3.0"
 
@@ -25,9 +25,9 @@ val appDependencies = Seq(
   "net.maffoo" %% "jsonquote-play" % "0.4.0",
   "com.typesafe.play" %% "play" % playVersion % "provided",
   "com.typesafe.play" %% "play-json" % playVersion % "provided",
-  "io.searchbox" % "jest" % "2.0.3",
+  "io.searchbox" % "jest" % "5.3.2",
   "com.typesafe.akka" %% "akka-stream" % "2.4.3",
-  "org.asynchttpclient" % "async-http-client" % "2.0.2"
+  "org.asynchttpclient" % "async-http-client" % "2.0.32"
 )
 
 lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
