@@ -46,7 +46,7 @@ class ElasticClientSpec extends StatefulElasticSpec {
 
     "create an index" in new WithElasticClient {
       val result = await(elasticClient.createIndex(simpleIndex))
-      result.getJsonString must be equalTo """{"acknowledged":true}"""
+      result.getJsonString must be equalTo """{"acknowledged":true,"shards_acknowledged":true}"""
     }
 
     "create an index with mapping and settings" in new WithElasticClient {
@@ -108,20 +108,24 @@ class ElasticClientSpec extends StatefulElasticSpec {
 
       val query =
         json"""{
-               "size": 2,
-               "query": {
-                  "match_all": {}
-               },
-               "filter": {
-                 "bool": {
-                   "must": {
-                     "range": {
-                       "someField": { "gte": 44, "lte": $maxFieldValue }
-                     }
-                   }
-                 }
-               }
-            }"""
+                  "size": 2,
+                  "query": {
+                    "bool": {
+                      "must": {
+                        "match_all": {}
+                      },
+                      "filter": {
+                        "bool": {
+                          "must": {
+                            "range": {
+                              "someField": { "gte": 44, "lte": $maxFieldValue }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }"""
       val scrollBatchResult = await(elasticClient
         .searchWithScroll[SomeDocument](testIndex, query, searchContextLifetime = 3.minutes)
         .runWith(collectingSink[SomeDocument, Seq]))
@@ -153,20 +157,24 @@ class ElasticClientSpec extends StatefulElasticSpec {
 
       val query =
         json"""{
-               "size": 3,
-               "query": {
-                  "match_all": {}
-               },
-               "filter": {
-                 "bool": {
-                   "must": {
-                     "range": {
-                       "someField": { "gte": 44, "lte": $maxFieldValue }
-                     }
-                   }
-                 }
-               }
-            }"""
+                  "size": 3,
+                  "query": {
+                    "bool": {
+                      "must": {
+                        "match_all": {}
+                      },
+                      "filter": {
+                        "bool": {
+                          "must": {
+                            "range": {
+                              "someField": { "gte": 44, "lte": $maxFieldValue }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }"""
       val scrollBatchResult = await(elasticClient.search[SomeDocument](testIndex, query))
       val (matchingDocuments, notMatchingDocuments) = documentsWithId
         .map(_._1)

@@ -2,17 +2,18 @@ package de.is24.jest4s
 
 import java.net.URI
 import java.nio.file.Files
+import java.util
 import java.util.UUID
 
+import de.is24.jest4s.utils.SLF4JLogging
 import org.apache.commons.io.FileUtils
 import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.node.NodeBuilder
-import play.api.inject.ApplicationLifecycle
+import org.elasticsearch.node.{ InternalSettingsPreparer, Node }
+import org.elasticsearch.plugins.Plugin
+import org.elasticsearch.transport.Netty3Plugin
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.blocking
+import scala.concurrent.{ ExecutionContext, Future, blocking }
 import scala.util.control.NonFatal
-import utils.SLF4JLogging
 
 trait EmbeddedElasticSearchSupport extends SLF4JLogging {
 
@@ -21,16 +22,16 @@ trait EmbeddedElasticSearchSupport extends SLF4JLogging {
   private lazy val clusterId = UUID.randomUUID().toString
   private lazy val clusterName = "embedded-elasticsearch-$clusterId"
   private lazy val dataDir = Files.createTempDirectory(s"${clusterName}_data").toFile
-  private lazy val settings = Settings.settingsBuilder
+  private lazy val settings = Settings.builder
     .put("path.home", dataDir.toString)
     .put("path.data", dataDir.toString)
     .put("cluster.name", clusterName)
-    .put("node.http.enabled", true)
-    .put("index.number_of_shards", 1)
-    .put("index.number_of_replicas", 0)
+    .put("http.enabled", true)
+    .put("transport.type", "local")
+    .put("http.type", "netty3")
     .build
 
-  private lazy val node = NodeBuilder.nodeBuilder().local(true).settings(settings).build
+  private lazy val node = new PluginConfigurableNode(settings, util.Arrays.asList(classOf[Netty3Plugin]))
 
   def startEmbeddedElasticSearch(): ElasticSearchHttpUri = {
     node.start()
@@ -52,4 +53,7 @@ trait EmbeddedElasticSearchSupport extends SLF4JLogging {
       }
     }
   }
+
+  private class PluginConfigurableNode(settings: Settings, classpathPlugins: util.Collection[Class[_ <: Plugin]]) extends Node(InternalSettingsPreparer.prepareEnvironment(settings, null), classpathPlugins)
+
 }
