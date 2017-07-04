@@ -18,6 +18,7 @@ val testDependencies = Seq(
   "org.specs2" %% "specs2-core" % specs2Version,
   "org.specs2" %% "specs2-junit" % specs2Version,
   "org.specs2" %% "specs2-mock" % specs2Version,
+  "org.apache.logging.log4j" % "log4j-api" % "2.8.2",
   "org.apache.logging.log4j" % "log4j-core" % "2.8.2",
   "org.elasticsearch.plugin" % "transport-netty3-client" % "5.3.0"
 ).map(_ % "test")
