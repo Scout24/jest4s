@@ -13,4 +13,4 @@ sbt_opts="${sbt_opts}\
   -Dhttp.proxyHost=proxy.rz.is24.loc \
   -Dhttp.proxyPort=3128"
 
-java $sbt_opts -jar $scriptdir/sbt-launch-0.13.7.jar "$@"
+java $sbt_opts -jar $scriptdir/sbt-launch-1.0.0.jar "$@"

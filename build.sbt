@@ -1,18 +1,17 @@
 import sbt.Keys._
 import sbt._
 import sbtrelease.ReleaseStateTransformations._
-import com.typesafe.sbt.SbtScalariform._
-import scalariform.formatter.preferences._
 
+val scalaVersionString = "2.12.3"
 val javaVersion = "1.8"
 val encoding = "utf-8"
-val playVersion = "2.5.15"
+val playVersion = "2.6.3"
 val specs2Version = "3.7.2"
 val elasticSearchVersion: String = "5.3.0"
 
 val testDependencies = Seq(
   "org.elasticsearch" % "elasticsearch" % elasticSearchVersion,
-  "com.typesafe.akka" %% "akka-testkit" % "2.3.9",
+  "com.typesafe.akka" %% "akka-testkit" % "2.5.4",
   "com.typesafe.play" %% "play-test" % playVersion,
   "com.typesafe.play" %% "play-specs2" % playVersion,
   "org.specs2" %% "specs2-core" % specs2Version,
@@ -24,12 +23,12 @@ val testDependencies = Seq(
 ).map(_ % "test")
 
 val appDependencies = Seq(
-  "net.maffoo" %% "jsonquote-core" % "0.4.0",
-  "net.maffoo" %% "jsonquote-play" % "0.4.0",
+  "net.maffoo" %% "jsonquote-core" % "0.5.1",
+  "net.maffoo" %% "jsonquote-play" % "0.5.1",
   "com.typesafe.play" %% "play" % playVersion % "provided",
   "com.typesafe.play" %% "play-json" % playVersion % "provided",
   "io.searchbox" % "jest" % "5.3.2",
-  "com.typesafe.akka" %% "akka-stream" % "2.4.3",
+  "com.typesafe.akka" %% "akka-stream" % "2.5.4",
   "org.asynchttpclient" % "async-http-client" % "2.0.32"
 )
 
@@ -37,47 +36,42 @@ lazy val compileScalastyle = taskKey[Unit]("compileScalastyle")
 
 lazy val root = Project(
   id = "root",
-  base = file("."),
-  settings = Defaults.coreDefaultSettings ++ net.virtualvoid.sbt.graph.Plugin.graphSettings ++ defaultScalariformSettings)
+  base = file("."))
+  .settings(Defaults.coreDefaultSettings)
   .settings(
     name := "jest4s",
     organization := "de.is24",
-    scalaVersion := "2.11.7",
-    ivyScala := ivyScala.value map {
-      _.copy(overrideScalaVersion = true)
-    },
+    scalaVersion := scalaVersionString,
+    crossScalaVersions := Seq(scalaVersionString, "2.11.11"),
+    releaseCrossBuild := true,
     libraryDependencies ++= appDependencies ++ testDependencies,
     javacOptions ++= Seq("-source", javaVersion, "-target", javaVersion, "-Xlint"),
     scalacOptions ++= Seq("-feature", "-language:postfixOps", "-target:jvm-" + javaVersion, "-unchecked", "-deprecation", "-encoding", encoding),
-    compileScalastyle := org.scalastyle.sbt.ScalastylePlugin.scalastyle.in(Compile).toTask("").value,
-    (compile in Compile) <<= (compile in Compile) dependsOn compileScalastyle,
+
+    /**
+      * scala style
+      */
+    compileScalastyle := scalastyle.in(Compile).toTask("").value,
+    (compile in Compile) := ((compile in Compile) dependsOn compileScalastyle).value,
+
     resolvers ++= Seq(
       "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
       "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
     ),
-    publishTo <<= version { (v: String) =>
+
+    publishTo := {
       val nexus = "https://oss.sonatype.org/"
-      if (v.trim.endsWith("SNAPSHOT"))
+      if (isSnapshot.value)
         Some("snapshots" at nexus + "content/repositories/snapshots")
       else
         Some("releases"  at nexus + "service/local/staging/deploy/maven2")
     },
 
     /**
-      * scalariform
-      */
-    ScalariformKeys.preferences := ScalariformKeys.preferences.value
-      .setPreference(RewriteArrowSymbols, false)
-      .setPreference(AlignArguments, true)
-      .setPreference(DoubleIndentClassDeclaration, true)
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(SpacesAroundMultiImports, true)
-      .setPreference(AlignParameters, true),
-
-    /**
       * publish
       */
     pgpReadOnly := false,
+    publishMavenStyle := true,
     pomExtra in Global := {
       <url>https://github.com/ImmobilienScout24/jest4s</url>
         <licenses>
